@@ -24,18 +24,29 @@ cd sessionize-cli
 npm install
 ```
 
+## Configuration
+
+Create a config file at `~/.sessionize-cli.json`:
+
+```json
+{
+  "apiKey": "bb_live_xxx",
+  "projectId": "your-browserbase-project-id",
+  "email": "your-sessionize-email",
+  "password": "your-sessionize-password",
+  "eventId": "22203",
+  "evaluationId": "8184"
+}
+```
+
+Set permissions: `chmod 600 ~/.sessionize-cli.json`
+
+CLI flags override config file values when provided.
+
 ## Usage
 
-All commands require authentication flags:
-
 ```bash
-node bin/sessionize.js <command> <subcommand> [options] \
-  --api-key <browserbase-api-key> \
-  --project-id <browserbase-project-id> \
-  --email <sessionize-email> \
-  --password <sessionize-password> \
-  --event-id <sessionize-event-id> \
-  --evaluation-id <sessionize-evaluation-id>
+node bin/sessionize.js <command> <subcommand> [options]
 ```
 
 ### Commands
@@ -45,22 +56,22 @@ node bin/sessionize.js <command> <subcommand> [options] \
 **Show current or specific session:**
 ```bash
 # Show current session (from state)
-node bin/sessionize.js session show [flags]
+node bin/sessionize.js session show
 
 # Show specific session
-node bin/sessionize.js session show --id 1100206 [flags]
+node bin/sessionize.js session show --id 1100206
 ```
 
 **Rate a session:**
 ```bash
 # Rate current session
-node bin/sessionize.js session rate 4,3,5,4 [flags]
+node bin/sessionize.js session rate 4,3,5,4
 
 # Rate specific session
-node bin/sessionize.js session rate 4,3,5,4 --id 1100206 [flags]
+node bin/sessionize.js session rate 4,3,5,4 --id 1100206
 
 # Rate with a comment
-node bin/sessionize.js session rate 4,3,5,4 --comment "Excellent proposal, very relevant" [flags]
+node bin/sessionize.js session rate 4,3,5,4 --comment "Excellent proposal, very relevant"
 ```
 
 Ratings are comma-separated values (typically 4 scores for Practical, Originality, Relevance, Clarity).
@@ -68,35 +79,47 @@ The `--comment` flag is optional and adds a reviewer comment to the session.
 
 **Navigate to a session:**
 ```bash
-node bin/sessionize.js session goto 1100206 [flags]
+node bin/sessionize.js session goto 1100206
 ```
 
 **List sessions:**
 ```bash
 # List all sessions
-node bin/sessionize.js session list [flags]
+node bin/sessionize.js session list
 
 # Filter by track
-node bin/sessionize.js session list --track "Track 1" [flags]
+node bin/sessionize.js session list --track "Track 1"
 ```
 
 #### Speaker Commands
 
 **Search speakers:**
 ```bash
-node bin/sessionize.js speaker search "John" [flags]
+node bin/sessionize.js speaker search "John"
 ```
 
 #### Auth Commands
 
 **Login:**
 ```bash
-node bin/sessionize.js auth login [flags]
+node bin/sessionize.js auth login
 ```
 
 **Check status:**
 ```bash
-node bin/sessionize.js auth status [flags]
+node bin/sessionize.js auth status
+```
+
+#### Config Commands
+
+**Show current configuration:**
+```bash
+node bin/sessionize.js config show
+```
+
+**Show config file path:**
+```bash
+node bin/sessionize.js config path
 ```
 
 **Reset state:**
@@ -109,50 +132,48 @@ node bin/sessionize.js auth reset
 ### Full workflow example
 
 ```bash
-# Set up aliases for brevity
-FLAGS="--api-key bb_live_xxx --project-id xxx --email user@example.com --password xxx --event-id 22203 --evaluation-id 8184"
-
 # View current session
-node bin/sessionize.js session show $FLAGS
+node bin/sessionize.js session show
 
 # Rate it and auto-advance to next
-node bin/sessionize.js session rate 4,4,3,5 $FLAGS
+node bin/sessionize.js session rate 4,4,3,5
+
+# Rate with a comment
+node bin/sessionize.js session rate 4,4,3,5 --comment "Great proposal"
 
 # View a specific session
-node bin/sessionize.js session show --id 1100206 $FLAGS
+node bin/sessionize.js session show --id 1100206
 
 # Rate that specific session
-node bin/sessionize.js session rate 3,3,4,4 --id 1100206 $FLAGS
+node bin/sessionize.js session rate 3,3,4,4 --id 1100206
 
 # List all sessions
-node bin/sessionize.js session list $FLAGS
+node bin/sessionize.js session list
 
 # Check auth state
-node bin/sessionize.js auth status $FLAGS
+node bin/sessionize.js auth status
 ```
 
 ### Using with jq
 
 ```bash
 # Get just the session title
-node bin/sessionize.js session show $FLAGS | jq -r '.session.title'
+node bin/sessionize.js session show | jq -r '.session.title'
 
 # Get list of session IDs
-node bin/sessionize.js session list $FLAGS | jq -r '.sessions[].sessionId'
+node bin/sessionize.js session list | jq -r '.sessions[].sessionId'
 
 # Pretty print current session
-node bin/sessionize.js session show $FLAGS | jq '.session | {title, speaker, track, progress}'
+node bin/sessionize.js session show | jq '.session | {title, speaker, track, progress}'
 ```
 
 ### Shell script for batch review
 
 ```bash
 #!/bin/bash
-FLAGS="--api-key $BB_API_KEY --project-id $BB_PROJECT_ID --email $SZ_EMAIL --password $SZ_PASSWORD --event-id $EVENT_ID --evaluation-id $EVAL_ID"
-
 while true; do
   # Show current session
-  SESSION=$(node bin/sessionize.js session show $FLAGS)
+  SESSION=$(node bin/sessionize.js session show)
   echo "$SESSION" | jq '{title: .session.title, speaker: .session.speaker.name, description: .session.description}'
 
   # Prompt for rating
@@ -161,10 +182,9 @@ while true; do
   if [ "$INPUT" = "quit" ]; then
     break
   elif [ "$INPUT" = "skip" ]; then
-    # Get next session ID and goto it
     continue
   else
-    node bin/sessionize.js session rate "$INPUT" $FLAGS
+    node bin/sessionize.js session rate "$INPUT"
   fi
 done
 ```

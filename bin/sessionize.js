@@ -3,6 +3,7 @@
 const sessionCommands = require('../lib/commands/session');
 const speakerCommands = require('../lib/commands/speaker');
 const authCommands = require('../lib/commands/auth');
+const config = require('../lib/config');
 
 function parseArgs(args) {
   const parsed = {
@@ -48,6 +49,7 @@ function kebabToCamel(str) {
 }
 
 function printUsage() {
+  const configPath = config.getConfigPath();
   console.log(`
 sessionize-cli - Interact with Sessionize as a conference organizer
 
@@ -79,7 +81,27 @@ COMMANDS:
   auth reset
     Clear all state
 
-REQUIRED FLAGS (for most commands):
+  config show
+    Show current configuration
+
+  config path
+    Show config file path
+
+CONFIGURATION:
+  Settings are loaded from: ${configPath}
+  CLI flags override config file values.
+
+  Config file format (JSON):
+  {
+    "apiKey": "bb_live_xxx",
+    "projectId": "xxx",
+    "email": "user@example.com",
+    "password": "xxx",
+    "eventId": "22203",
+    "evaluationId": "8184"
+  }
+
+OPTIONAL FLAGS (override config):
   --api-key <key>         Browserbase API key
   --project-id <id>       Browserbase project ID
   --email <email>         Sessionize email
@@ -88,29 +110,20 @@ REQUIRED FLAGS (for most commands):
   --evaluation-id <id>    Sessionize evaluation ID
 
 EXAMPLES:
-  # Show current session
-  node sessionize.js session show \\
-    --api-key bb_xxx --project-id xxx \\
-    --email user@example.com --password xxx \\
-    --event-id 22203 --evaluation-id 8184
+  # Show current session (uses config file)
+  node sessionize.js session show
 
   # Rate current session
-  node sessionize.js session rate 4,3,5,4 \\
-    --api-key bb_xxx --project-id xxx \\
-    --email user@example.com --password xxx \\
-    --event-id 22203 --evaluation-id 8184
-
-  # Rate specific session
-  node sessionize.js session rate 4,3,5,4 --id 1234567 \\
-    --api-key bb_xxx --project-id xxx \\
-    --email user@example.com --password xxx \\
-    --event-id 22203 --evaluation-id 8184
+  node sessionize.js session rate 4,3,5,4
 
   # Rate with a comment
-  node sessionize.js session rate 4,3,5,4 --comment "Great talk proposal!" \\
-    --api-key bb_xxx --project-id xxx \\
-    --email user@example.com --password xxx \\
-    --event-id 22203 --evaluation-id 8184
+  node sessionize.js session rate 4,3,5,4 --comment "Great talk proposal!"
+
+  # Rate specific session
+  node sessionize.js session rate 4,3,5,4 --id 1234567
+
+  # Override config with flags
+  node sessionize.js session show --event-id 99999
 
   # Check auth status
   node sessionize.js auth status
@@ -128,8 +141,17 @@ async function main() {
   const parsed = parseArgs(args);
   const { command, subcommand, positional, flags } = parsed;
 
-  // Build options object
-  const options = { ...flags };
+  // Load config and merge with CLI flags (flags override config)
+  const configData = config.load();
+  const options = {
+    apiKey: flags.apiKey || configData.apiKey,
+    projectId: flags.projectId || configData.projectId,
+    email: flags.email || configData.email,
+    password: flags.password || configData.password,
+    eventId: flags.eventId || configData.eventId,
+    evaluationId: flags.evaluationId || configData.evaluationId,
+    ...flags
+  };
 
   // Handle positional arguments based on command
   if (command === 'session' && subcommand === 'rate' && positional[0]) {
@@ -192,6 +214,35 @@ async function main() {
             break;
           default:
             console.error(`Unknown auth subcommand: ${subcommand}`);
+            printUsage();
+            process.exit(1);
+        }
+        break;
+
+      case 'config':
+        switch (subcommand) {
+          case 'show':
+            const currentConfig = config.load();
+            // Mask password for display
+            const displayConfig = { ...currentConfig };
+            if (displayConfig.password) {
+              displayConfig.password = '***' + displayConfig.password.slice(-4);
+            }
+            result = {
+              success: true,
+              configPath: config.getConfigPath(),
+              config: displayConfig
+            };
+            break;
+          case 'path':
+            result = {
+              success: true,
+              configPath: config.getConfigPath(),
+              exists: config.exists()
+            };
+            break;
+          default:
+            console.error(`Unknown config subcommand: ${subcommand}`);
             printUsage();
             process.exit(1);
         }
