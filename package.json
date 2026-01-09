@@ -1,0 +1,19 @@
+{
+  "name": "sessionize-cli",
+  "version": "0.1.0",
+  "description": "CLI tool for interacting with Sessionize as a conference organizer",
+  "main": "bin/sessionize.js",
+  "bin": {
+    "sessionize": "./bin/sessionize.js"
+  },
+  "scripts": {
+    "start": "node bin/sessionize.js"
+  },
+  "dependencies": {
+    "@browserbasehq/sdk": "^2.0.0",
+    "playwright-core": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
