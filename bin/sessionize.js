@@ -150,6 +150,17 @@ async function main() {
     positional
   };
 
+  // Map positional arguments to named options for specific commands
+  if (command === 'session' && subcommand === 'rate' && positional[0]) {
+    options.ratings = positional[0];
+  }
+  if (command === 'session' && subcommand === 'goto' && positional[0]) {
+    options.sessionId = positional[0];
+  }
+  if (command === 'speaker' && subcommand === 'search' && positional[0]) {
+    options.query = positional[0];
+  }
+
   let result;
 
   try {
