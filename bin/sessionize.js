@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
-const sessionCommands = require('../lib/commands/session');
-const speakerCommands = require('../lib/commands/speaker');
-const authCommands = require('../lib/commands/auth');
-const config = require('../lib/config');
+const path = require('path');
+const packageDir = path.dirname(path.dirname(require.main.filename));
+
+const sessionCommands = require(path.join(packageDir, 'lib/commands/session'));
+const speakerCommands = require(path.join(packageDir, 'lib/commands/speaker'));
+const authCommands = require(path.join(packageDir, 'lib/commands/auth'));
+const config = require(path.join(packageDir, 'lib/config'));
 
 function parseArgs(args) {
   const parsed = {
@@ -54,7 +57,7 @@ function printUsage() {
 sessionize-cli - Interact with Sessionize as a conference organizer
 
 USAGE:
-  node sessionize.js <command> <subcommand> [options]
+  sessionize <command> <subcommand> [options]
 
 COMMANDS:
   session show [--id <sessionId>]
@@ -111,58 +114,41 @@ OPTIONAL FLAGS (override config):
 
 EXAMPLES:
   # Show current session (uses config file)
-  node sessionize.js session show
+  sessionize session show
 
   # Rate current session
-  node sessionize.js session rate 4,3,5,4
+  sessionize session rate 4,3,5,4
 
   # Rate with a comment
-  node sessionize.js session rate 4,3,5,4 --comment "Great talk proposal!"
+  sessionize session rate 4,3,5,4 --comment "Great talk proposal!"
 
   # Rate specific session
-  node sessionize.js session rate 4,3,5,4 --id 1234567
+  sessionize session rate 4,3,5,4 --id 1234567
 
   # Override config with flags
-  node sessionize.js session show --event-id 99999
+  sessionize session show --event-id 99999
 
   # Check auth status
-  node sessionize.js auth status
+  sessionize auth status
 `);
 }
 
 async function main() {
-  const args = process.argv.slice(2);
+  const argv = process.argv.slice(2);
+  const { command, subcommand, positional, flags } = parseArgs(argv);
 
-  if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
+  if (!command || !subcommand) {
     printUsage();
-    process.exit(0);
+    process.exit(1);
   }
 
-  const parsed = parseArgs(args);
-  const { command, subcommand, positional, flags } = parsed;
-
-  // Load config and merge with CLI flags (flags override config)
-  const configData = config.load();
+  // Load config and merge with CLI flags (flags take precedence)
+  const configValues = config.load();
   const options = {
-    apiKey: flags.apiKey || configData.apiKey,
-    projectId: flags.projectId || configData.projectId,
-    email: flags.email || configData.email,
-    password: flags.password || configData.password,
-    eventId: flags.eventId || configData.eventId,
-    evaluationId: flags.evaluationId || configData.evaluationId,
-    ...flags
+    ...configValues,  // Config values as defaults
+    ...flags,         // CLI flags override config
+    positional
   };
-
-  // Handle positional arguments based on command
-  if (command === 'session' && subcommand === 'rate' && positional[0]) {
-    options.ratings = positional[0];
-  }
-  if (command === 'session' && subcommand === 'goto' && positional[0]) {
-    options.sessionId = positional[0];
-  }
-  if (command === 'speaker' && subcommand === 'search' && positional[0]) {
-    options.query = positional[0];
-  }
 
   let result;
 
