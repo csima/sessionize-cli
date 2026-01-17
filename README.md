@@ -21,10 +21,13 @@ A CLI tool for interacting with Sessionize as a conference organizer. Built for 
 ## Installation
 
 ```bash
-git clone <repo>
+git clone https://github.com/csima/sessionize-cli
 cd sessionize-cli
 npm install
+npm link
 ```
+
+After `npm link`, you can run `sessionize` from anywhere. Alternatively, run directly with `node bin/sessionize.js`.
 
 ## Configuration
 
@@ -59,7 +62,7 @@ CLI flags override config file values when provided.
 ## Usage
 
 ```bash
-node bin/sessionize.js <command> <subcommand> [options]
+sessionize <command> <subcommand> [options]
 ```
 
 ### Commands
@@ -69,22 +72,22 @@ node bin/sessionize.js <command> <subcommand> [options]
 **Show current or specific session:**
 ```bash
 # Show current session (from state)
-node bin/sessionize.js session show
+sessionize session show
 
 # Show specific session
-node bin/sessionize.js session show --id 1100206
+sessionize session show --id 1100206
 ```
 
 **Rate a session:**
 ```bash
 # Rate current session
-node bin/sessionize.js session rate 4,3,5,4
+sessionize session rate 4,3,5,4
 
 # Rate specific session
-node bin/sessionize.js session rate 4,3,5,4 --id 1100206
+sessionize session rate 4,3,5,4 --id 1100206
 
 # Rate with a comment
-node bin/sessionize.js session rate 4,3,5,4 --comment "Excellent proposal, very relevant"
+sessionize session rate 4,3,5,4 --comment "Excellent proposal, very relevant"
 ```
 
 Ratings are comma-separated values (typically 4 scores for Practical, Originality, Relevance, Clarity).
@@ -92,52 +95,52 @@ The `--comment` flag is optional and adds a reviewer comment to the session.
 
 **Navigate to a session:**
 ```bash
-node bin/sessionize.js session goto 1100206
+sessionize session goto 1100206
 ```
 
 **List sessions:**
 ```bash
 # List all sessions
-node bin/sessionize.js session list
+sessionize session list
 
 # Filter by track
-node bin/sessionize.js session list --track "Track 1"
+sessionize session list --track "Track 1"
 ```
 
 #### Speaker Commands
 
 **Search speakers:**
 ```bash
-node bin/sessionize.js speaker search "John"
+sessionize speaker search "John"
 ```
 
 #### Auth Commands
 
 **Login:**
 ```bash
-node bin/sessionize.js auth login
+sessionize auth login
 ```
 
 **Check status:**
 ```bash
-node bin/sessionize.js auth status
+sessionize auth status
 ```
 
 #### Config Commands
 
 **Show current configuration:**
 ```bash
-node bin/sessionize.js config show
+sessionize config show
 ```
 
 **Show config file path:**
 ```bash
-node bin/sessionize.js config path
+sessionize config path
 ```
 
 **Reset state:**
 ```bash
-node bin/sessionize.js auth reset
+sessionize auth reset
 ```
 
 ## Examples
@@ -146,38 +149,38 @@ node bin/sessionize.js auth reset
 
 ```bash
 # View current session
-node bin/sessionize.js session show
+sessionize session show
 
 # Rate it and auto-advance to next
-node bin/sessionize.js session rate 4,4,3,5
+sessionize session rate 4,4,3,5
 
 # Rate with a comment
-node bin/sessionize.js session rate 4,4,3,5 --comment "Great proposal"
+sessionize session rate 4,4,3,5 --comment "Great proposal"
 
 # View a specific session
-node bin/sessionize.js session show --id 1100206
+sessionize session show --id 1100206
 
 # Rate that specific session
-node bin/sessionize.js session rate 3,3,4,4 --id 1100206
+sessionize session rate 3,3,4,4 --id 1100206
 
 # List all sessions
-node bin/sessionize.js session list
+sessionize session list
 
 # Check auth state
-node bin/sessionize.js auth status
+sessionize auth status
 ```
 
 ### Using with jq
 
 ```bash
 # Get just the session title
-node bin/sessionize.js session show | jq -r '.session.title'
+sessionize session show | jq -r '.session.title'
 
 # Get list of session IDs
-node bin/sessionize.js session list | jq -r '.sessions[].sessionId'
+sessionize session list | jq -r '.sessions[].sessionId'
 
 # Pretty print current session
-node bin/sessionize.js session show | jq '.session | {title, speaker, track, progress}'
+sessionize session show | jq '.session | {title, speaker, track, progress}'
 ```
 
 ### Shell script for batch review
@@ -186,7 +189,7 @@ node bin/sessionize.js session show | jq '.session | {title, speaker, track, pro
 #!/bin/bash
 while true; do
   # Show current session
-  SESSION=$(node bin/sessionize.js session show)
+  SESSION=$(sessionize session show)
   echo "$SESSION" | jq '{title: .session.title, speaker: .session.speaker.name, description: .session.description}'
 
   # Prompt for rating
@@ -197,7 +200,7 @@ while true; do
   elif [ "$INPUT" = "skip" ]; then
     continue
   else
-    node bin/sessionize.js session rate "$INPUT"
+    sessionize session rate "$INPUT"
   fi
 done
 ```
@@ -256,7 +259,7 @@ The CLI maintains state in `~/.sessionize-cli-state.json`:
 
 Reset with:
 ```bash
-node bin/sessionize.js auth reset
+sessionize auth reset
 ```
 
 ## Project Structure
