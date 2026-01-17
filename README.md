@@ -14,7 +14,9 @@ A CLI tool for interacting with Sessionize as a conference organizer. Built for 
 
 - Node.js 18+
 - [Browserbase](https://browserbase.com) account (for cloud browser automation)
-- Sessionize organizer account
+  - Sign up at browserbase.com
+  - Get your **API Key** and **Project ID** from the Browserbase dashboard under Settings
+- Sessionize organizer account with access to an event's evaluation/rating page
 
 ## Installation
 
@@ -34,12 +36,23 @@ Create a config file at `~/.sessionize-cli.json`:
   "projectId": "your-browserbase-project-id",
   "email": "your-sessionize-email",
   "password": "your-sessionize-password",
-  "eventId": "22203",
-  "evaluationId": "8184"
+  "eventId": "12345",
+  "evaluationId": "6789"
 }
 ```
 
 Set permissions: `chmod 600 ~/.sessionize-cli.json`
+
+### Finding your Sessionize Event ID and Evaluation ID
+
+1. Log in to Sessionize and navigate to your event
+2. Go to **Evaluation** > **Rate Sessions**
+3. Look at the URL in your browser - it will look like:
+   ```
+   https://sessionize.com/app/organizer/event/evaluation/rate/12345/6789
+   ```
+4. The first number (`12345`) is your **eventId**
+5. The second number (`6789`) is your **evaluationId**
 
 CLI flags override config file values when provided.
 

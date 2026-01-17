@@ -100,8 +100,8 @@ CONFIGURATION:
     "projectId": "xxx",
     "email": "user@example.com",
     "password": "xxx",
-    "eventId": "22203",
-    "evaluationId": "8184"
+    "eventId": "12345",
+    "evaluationId": "6789"
   }
 
 OPTIONAL FLAGS (override config):
